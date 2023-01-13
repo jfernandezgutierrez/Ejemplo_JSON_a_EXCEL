@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.1/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/xlsx@0.16.1/dist/xlsx.full.min.js"></script>
+    <script>
+        function JSONToExcel(jsonData) {
+          //const jsonData = XLSX.utils.sheet_to_json(jsonData);
+            const ws = XLSX.utils.json_to_sheet(jsonData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            XLSX.writeFile(wb, 'data.xlsx');
+        }
+        let yourJSON = [{
+            "nombre": "John",
+            "apellido": "Doe",
+            "edad": 30,
+            "ciudad": "New York",
+            "pais": "USA"
+        }]
+    </script>
+</head>
+<body>
+    <button onclick="JSONToExcel(yourJSON)">Descargar Excel</button>
+</body>
+</html>
+
+
+
+
