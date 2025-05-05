@@ -1,30 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.1/xlsx.full.min.js"></script>
-  <script src="https://unpkg.com/xlsx@0.16.1/dist/xlsx.full.min.js"></script>
-    <script>
-        function JSONToExcel(jsonData) {
-          //const jsonData = XLSX.utils.sheet_to_json(jsonData);
-            const ws = XLSX.utils.json_to_sheet(jsonData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-            XLSX.writeFile(wb, 'data.xlsx');
-        }
-        let yourJSON = [{
-            "nombre": "John",
-            "apellido": "Doe",
-            "edad": 30,
-            "ciudad": "New York",
-            "pais": "USA"
-        }]
-    </script>
+  <meta charset="UTF-8" />
+  <title>Transformación de JSON a Excel / Excel a JSON</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    .container {
+      display: flex;
+      gap: 40px;
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .section {
+      border: 1px solid #02f722;
+      padding: 20px;
+      width: 400px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input[type="file"] {
+      margin: 10px 0;
+    }
+
+    button {
+      padding: 8px 16px;
+      background-color: #26aeba;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
-    <button onclick="JSONToExcel(yourJSON)">Descargar Excel</button>
+  <h1>🧩 Transformación de JSON a Excel / Excel a JSON</h1>
+  <div class="container">
+    <!-- JSON a Excel -->
+    <div class="section">
+      <h2>JSON a Excel</h2>
+      <input type="file" id="jsonFile" accept=".json" />
+      <br />
+      <button onclick="convertJsonToExcel()">Descargar Excel</button>
+    </div>
+
+    <!-- Excel a JSON -->
+    <div class="section">
+      <h2>Excel a JSON</h2>
+      <input type="file" id="excelFile" accept=".xlsx" />
+      <br />
+      <button onclick="convertExcelToJson()">Descargar JSON</button>
+    </div>
+  </div>
+
+  <script>
+    function flattenObject(obj, prefix = '', result = {}) {
+      for (let key in obj) {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+          flattenObject(obj[key], fullKey, result);
+        } else {
+          result[fullKey] = Array.isArray(obj[key]) ? obj[key].join(', ') : obj[key];
+        }
+      }
+      return result;
+    }
+
+    function convertJsonToExcel() {
+      const input = document.getElementById('jsonFile');
+      if (!input.files.length) return alert("Selecciona un archivo JSON");
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const rawData = JSON.parse(e.target.result);
+          const flatData = rawData.map(item => flattenObject(item));
+          const ws = XLSX.utils.json_to_sheet(flatData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Datos");
+          XLSX.writeFile(wb, "resultado.xlsx");
+        } catch (err) {
+          alert("El archivo no es un JSON válido");
+        }
+      };
+      reader.readAsText(input.files[0]);
+    }
+
+    function convertExcelToJson() {
+      const input = document.getElementById('excelFile');
+      if (!input.files.length) return alert("Selecciona un archivo Excel");
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "resultado.json";
+        link.click();
+      };
+      reader.readAsArrayBuffer(input.files[0]);
+    }
+  </script>
 </body>
+
 </html>
-
-
-
-
